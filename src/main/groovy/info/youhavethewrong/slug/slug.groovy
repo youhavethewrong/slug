@@ -23,18 +23,19 @@ def slug() {
     def http = new HTTPBuilder( url )
      
     http.request(GET,TEXT) { req ->
-      headers.'User-Agent' = 'Mozilla/5.0'
-     
-      response.success = { resp, reader ->
-        assert resp.status == 200
-        println "My response handler got response: ${resp.statusLine}"
-        println "Response length: ${resp.headers.'Content-Length'}"
-        System.out << reader
-      }
-     
-      response.'404' = { resp ->
-        println 'Not found'
-      }
+        headers.'User-Agent' = 'Mozilla/5.0'
+
+        response.success = { resp, reader ->
+            def pat = ~/<a\s+href=(["']http.*?["'])/
+            def s = pat.matcher(reader.text)
+            s.findAll().each { m ->
+                println m[1]
+            }
+        }
+
+        response.'404' = { resp ->
+            println 'Not found'
+        }
     }
 }
 
