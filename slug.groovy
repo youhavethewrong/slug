@@ -1,5 +1,6 @@
 /* slug.groovy
  * An Internet scraper.
+ * Requires HTTPBuilder, which has a few deps.
  *
  * ESC 2013.05.22
  */
