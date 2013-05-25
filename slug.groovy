@@ -20,17 +20,31 @@ def findAtUrl(url, regex) {
     def http = new HTTPBuilder( url )
      
     http.request(GET,TEXT) { req ->
-        headers.'User-Agent' = 'Mozilla/5.0'
+        headers.'User-Agent' = 'Slug 0.001'
 
         response.success = { resp, reader ->
             def s = regex.matcher(reader.text)
             return s.findAll() as Set
         }
 
-        response.'404' = { resp ->
-            println 'Not found'
+        response.failure = { resp ->
+            println "[ERROR] request failed with code: "+resp.status
             return []
         }
+    }
+}
+
+def scrape(url, discoverRegex, contentRegex) {
+    findAtUrl(url, discoverRegex).each { link ->
+        nextUrl = link[1]
+        paras = []
+        if(nextUrl.startsWith("http")) {
+            paras = findAtUrl(link[1], contentRegex)
+        }
+        else {
+            paras = findAtUrl(url+link[1], contentRegex)
+        }
+        println paras
     }
 }
 
@@ -42,15 +56,10 @@ def slug() {
 
     def url = args[0]
 
-    linksRegex = ~/<a\s+href=["']((?:https?:\/\/)?.*?)["']/
-    paraRegex = ~/<p>(.*?)<\/p>/
+    linksRegex = ~/<a\s+href=["']((?:https?:\/\/)?[^(){}]*?)["']/
+    paraRegex = ~/<p\s*.*?>(.*?)<\/p>/
 
-    findAtUrl(url, linksRegex).each { m ->
-        println "Searching: "+url+m[1]
-        findAtUrl(url+m[1], paraRegex).each { n ->
-            println n
-        }
-    }
+    scrape(url, linksRegex, paraRegex)
 }
 
 slug()
